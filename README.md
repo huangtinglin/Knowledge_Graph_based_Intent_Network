@@ -42,7 +42,7 @@ The code has been tested running under Python 3.6.5. The required packages are a
 
 ## Reproducibility & Example to Run the Codes
 
-To demonstrate the reproducibility of the best performance reported in our paper and faciliate researchers to track whether the model status is consistent with ours, we provide the best parameter settings (might be different for the custormized datasets) in the scripts, and provide [the log for our trainings](https://github.com/huangtinglin/KGIN_private/tree/master/training_log).
+To demonstrate the reproducibility of the best performance reported in our paper and faciliate researchers to track whether the model status is consistent with ours, we provide the best parameter settings (might be different for the custormized datasets) in the scripts, and provide [the log for our trainings](https://github.com/huangtinglin/Knowledge_Graph_based_Intent_Network/tree/main/training_log).
 
 The instruction of commands has been clearly stated in the codes (see the parser function in utils/parser.py). 
 
