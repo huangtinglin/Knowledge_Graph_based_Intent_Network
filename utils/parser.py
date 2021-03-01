@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument('--test_flag', nargs='?', default='part',
                         help='Specify the test type from {part, full}, indicating whether the reference is done in mini-batch')
     parser.add_argument("--n_factors", type=int, default=4, help="number of latent factor for user favour")
+    parser.add_argument("--ind", type=str, default='distance', help="Independence modeling: mi, distance, cosine")
 
     # ===== relation context ===== #
     parser.add_argument('--context_hops', type=int, default=3, help='number of context hops')

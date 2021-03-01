@@ -55,8 +55,8 @@ class GraphConv(nn.Module):
     Graph Convolutional Network
     """
     def __init__(self, channel, n_hops, n_users,
-                 n_factors, n_relations,
-                 interact_mat, node_dropout_rate=0.5, mess_dropout_rate=0.1):
+                 n_factors, n_relations, interact_mat,
+                 ind, node_dropout_rate=0.5, mess_dropout_rate=0.1):
         super(GraphConv, self).__init__()
 
         self.convs = nn.ModuleList()
@@ -66,6 +66,7 @@ class GraphConv(nn.Module):
         self.n_factors = n_factors
         self.node_dropout_rate = node_dropout_rate
         self.mess_dropout_rate = mess_dropout_rate
+        self.ind = ind
 
         self.temperature = 0.2
 
@@ -103,22 +104,21 @@ class GraphConv(nn.Module):
         out = torch.sparse.FloatTensor(i, v, x.shape).to(x.device)
         return out * (1. / (1 - rate))
 
-    def _cul_cor_pro(self):
-        # disen_T: [num_factor, dimension]
-        disen_T = self.disen_weight_att.t()
-
-        # normalized_disen_T: [num_factor, dimension]
-        normalized_disen_T = disen_T / disen_T.norm(dim=1, keepdim=True)
-
-        pos_scores = torch.sum(normalized_disen_T * normalized_disen_T, dim=1)
-        ttl_scores = torch.sum(torch.mm(disen_T, self.disen_weight_att), dim=1)
-
-        pos_scores = torch.exp(pos_scores / self.temperature)
-        ttl_scores = torch.exp(ttl_scores / self.temperature)
-
-        mi_score = - torch.sum(torch.log(pos_scores / ttl_scores))
-        return mi_score
-
+    # def _cul_cor_pro(self):
+    #     # disen_T: [num_factor, dimension]
+    #     disen_T = self.disen_weight_att.t()
+    #
+    #     # normalized_disen_T: [num_factor, dimension]
+    #     normalized_disen_T = disen_T / disen_T.norm(dim=1, keepdim=True)
+    #
+    #     pos_scores = torch.sum(normalized_disen_T * normalized_disen_T, dim=1)
+    #     ttl_scores = torch.sum(torch.mm(disen_T, self.disen_weight_att), dim=1)
+    #
+    #     pos_scores = torch.exp(pos_scores / self.temperature)
+    #     ttl_scores = torch.exp(ttl_scores / self.temperature)
+    #
+    #     mi_score = - torch.sum(torch.log(pos_scores / ttl_scores))
+    #     return mi_score
 
     def _cul_cor(self):
         def CosineSimilarity(tensor_1, tensor_2):
@@ -146,11 +146,33 @@ class GraphConv(nn.Module):
             dcov_AA = torch.sqrt(torch.max((A * A).sum() / channel ** 2, zero) + 1e-8)
             dcov_BB = torch.sqrt(torch.max((B * B).sum() / channel ** 2, zero) + 1e-8)
             return dcov_AB / torch.sqrt(dcov_AA * dcov_BB + 1e-8)
-        cor = 0
+        def MutualInformation():
+            # disen_T: [num_factor, dimension]
+            disen_T = self.disen_weight_att.t()
+
+            # normalized_disen_T: [num_factor, dimension]
+            normalized_disen_T = disen_T / disen_T.norm(dim=1, keepdim=True)
+
+            pos_scores = torch.sum(normalized_disen_T * normalized_disen_T, dim=1)
+            ttl_scores = torch.sum(torch.mm(disen_T, self.disen_weight_att), dim=1)
+
+            pos_scores = torch.exp(pos_scores / self.temperature)
+            ttl_scores = torch.exp(ttl_scores / self.temperature)
+
+            mi_score = - torch.sum(torch.log(pos_scores / ttl_scores))
+            return mi_score
+
         """cul similarity for each latent factor weight pairs"""
-        for i in range(self.n_factors):
-            for j in range(i + 1, self.n_factors):
-                cor += DistanceCorrelation(self.disen_weight_att[i], self.disen_weight_att[j])
+        if self.ind == 'mi':
+            return MutualInformation()
+        else:
+            cor = 0
+            for i in range(self.n_factors):
+                for j in range(i + 1, self.n_factors):
+                    if self.ind == 'distance':
+                        cor += DistanceCorrelation(self.disen_weight_att[i], self.disen_weight_att[j])
+                    else:
+                        cor += CosineSimilarity(self.disen_weight_att[i], self.disen_weight_att[j])
         return cor
 
     def forward(self, user_emb, entity_emb, latent_emb, edge_index, edge_type,
@@ -163,8 +185,7 @@ class GraphConv(nn.Module):
 
         entity_res_emb = entity_emb  # [n_entity, channel]
         user_res_emb = user_emb  # [n_users, channel]
-        # cor = self._cul_cor()
-        cor = self._cul_cor_pro()
+        cor = self._cul_cor()
         for i in range(len(self.convs)):
             entity_emb, user_emb = self.convs[i](entity_emb, user_emb, latent_emb,
                                                  edge_index, edge_type, interact_mat,
@@ -203,6 +224,7 @@ class Recommender(nn.Module):
         self.node_dropout_rate = args_config.node_dropout_rate
         self.mess_dropout = args_config.mess_dropout
         self.mess_dropout_rate = args_config.mess_dropout_rate
+        self.ind = args_config.ind
         self.device = torch.device("cuda:" + str(args_config.gpu_id)) if args_config.cuda \
                                                                       else torch.device("cpu")
 
@@ -231,6 +253,7 @@ class Recommender(nn.Module):
                          n_relations=self.n_relations,
                          n_factors=self.n_factors,
                          interact_mat=self.interact_mat,
+                         ind=self.ind,
                          node_dropout_rate=self.node_dropout_rate,
                          mess_dropout_rate=self.mess_dropout_rate)
 
