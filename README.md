@@ -4,8 +4,6 @@ This is our PyTorch implementation for the paper:
 
 > Xiang Wang, Tinglin Huang, Dingxian Wang, Yancheng Yuan, Zhenguang Liu, Xiangnan He and Tat-Seng Chua (2021). Learning Intents behind Interactions with Knowledge Graph for Recommendation.  [Paper in arXiv](https://arxiv.org/abs/2102.07057). In WWW'2021, Ljubljana, Slovenia, April 19-23, 2021.
 
-Author: Mr. Tinglin Huang (tinglin.huang at zju.edu.cn)
-
 ## Introduction
 
 Knowledge Graph-based Intent Network (KGIN) is a recommendation framework, which consists of three components: (1)user Intent modeling, (2)relational path-aware aggregation, (3)indepedence modeling.
