@@ -23,6 +23,7 @@ If you want to use our codes and datasets in your research, please cite:
               Tat{-}Seng Chua},
   title     = {Learning Intents behind Interactions with Knowledge Graph for Recommendation},
   booktitle = {{WWW}},
+  pages     = {878-887},
   year      = {2021}
 }
 ```
@@ -119,6 +120,7 @@ Any scientific publications that use our datasets should cite the following pape
               Tat{-}Seng Chua},
   title     = {Learning Intents behind Interactions with Knowledge Graph for Recommendation},
   booktitle = {{WWW}},
+  pages     = {878-887},
   year      = {2021}
 }
 ```
